@@ -1,7 +1,28 @@
 import RecentRecipesSection from "../../components/home/RecentRecipesSection";
+import CollectionsSection from "../../components/home/CollectionsSection";
 
 export default function Home() {
   const loading = false;
+  const collections = [
+    {
+      id: "c1",
+      name: "Weeknight Dinners",
+      description: "Fast meals I can make in under 25 minutes.",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "c2",
+      name: "Meal Prep",
+      description: "Recipes that scale well for 3–5 days.",
+      created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    },
+    {
+      id: "c3",
+      name: "Desserts",
+      description: null,
+      created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+    },
+  ];
 
   const recipes = [
     {
@@ -31,6 +52,7 @@ export default function Home() {
       </div>
 
       <RecentRecipesSection loading={loading} recipes={recipes} />
+      <CollectionsSection loading={loading} collections={collections} />
 
       {/* TODO */}
       {/* <CollectionsSection loading={false} collections={[]} /> */}
