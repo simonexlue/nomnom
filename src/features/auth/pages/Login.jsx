@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 import Alert from "../../../components/ui/Alert";
 
 export default function Login() {
@@ -7,15 +8,14 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const navigate = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
-    setSuccessMsg("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -27,10 +27,7 @@ export default function Login() {
       return;
     }
 
-    setSuccessMsg("Sign in successful!");
-
-    // TODO: Delayed redirect after
-    // setTimeout(() => (window.location.href = "/"), 800);
+    navigate("/", { replace: true });
   }
 
   const inputClass =
@@ -84,7 +81,6 @@ export default function Login() {
             </div>
 
             {error && <Alert variant="error">{error}</Alert>}
-            {successMsg && <Alert variant="success">{successMsg}</Alert>}
 
             <button type="submit" disabled={loading} className={buttonClass}>
               {loading ? "Logging in..." : "Log In"}
@@ -103,7 +99,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* DESKTOP (lg+): split screen, left no-card form + right purple panel */}
+      {/* DESKTOP (lg+): split screen */}
       <div className="hidden lg:grid min-h-screen grid-cols-2">
         {/* LEFT */}
         <div className="bg-white flex items-center justify-center px-10">
@@ -147,7 +143,6 @@ export default function Login() {
               </div>
 
               {error && <Alert variant="error">{error}</Alert>}
-              {successMsg && <Alert variant="success">{successMsg}</Alert>}
 
               <button type="submit" disabled={loading} className={buttonClass}>
                 {loading ? "Logging in..." : "Log In"}
@@ -188,7 +183,6 @@ export default function Login() {
               organized.
             </p>
 
-            {/* Image slot (optional) */}
             <div className="mt-10 flex items-center gap-6">
               <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
                 ⭐
@@ -197,14 +191,6 @@ export default function Login() {
                 Tip: If login fails, make sure you confirmed your email first.
               </div>
             </div>
-
-            {/* background image later
-            <img
-              src="/login-hero.png"
-              alt="NomNom login"
-              className="mt-10 w-full max-w-md"
-            />
-            */}
           </div>
         </div>
       </div>
