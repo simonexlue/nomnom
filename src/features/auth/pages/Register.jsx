@@ -37,7 +37,7 @@ export default function Register() {
   const inputClass =
     "w-full rounded-xl bg-gray-200 px-4 py-2.5 outline-none ring-2 ring-transparent focus:ring-yellow-300";
   const buttonClass =
-    "w-full rounded-xl bg-yellow-400 py-2.5 font-medium shadow-sm hover:bg-yellow-300 hover:shadow active:scale-[0.98] transition disabled:cursor-not-allowed disabled:opacity-60";
+    "w-full rounded-xl bg-yellow-400 py-2.5 font-medium shadow-sm hover:bg-yellow-300 hover:shadow active:scale-[0.98] transition disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer";
 
   return (
     <div className="min-h-screen w-full bg-gray-100">
