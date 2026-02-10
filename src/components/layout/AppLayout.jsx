@@ -5,7 +5,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="w-full px-4 py-6 ">
-        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+        <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
           {/* Sidebar hidden on mobile */}
           <aside className="hidden lg:block">
             <SideNav />

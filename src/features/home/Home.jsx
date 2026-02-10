@@ -44,6 +44,7 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
           Home
@@ -51,11 +52,9 @@ export default function Home() {
         <div className="mt-2 h-1 w-10 rounded-full bg-yellow-400" />
       </div>
 
+      {/* Sections */}
       <RecentRecipesSection loading={loading} recipes={recipes} />
       <CollectionsSection loading={loading} collections={collections} />
-
-      {/* TODO */}
-      {/* <CollectionsSection loading={false} collections={[]} /> */}
     </div>
   );
 }
