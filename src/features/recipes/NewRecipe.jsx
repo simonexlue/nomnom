@@ -17,6 +17,9 @@ export default function NewRecipe() {
     const [collection, setCollection] = useState([])
     const [selectedCollectionId, setSelectedCollectionId] = useState("")
 
+    // const {user} = useAuth();
+    const user_id = useAuth().user.id
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,15 +38,11 @@ export default function NewRecipe() {
         fetchCollectionNames()
     }, [])
 
-    // const {user} = useAuth();
-    const user_id = useAuth().user.id
-
-    // console.log(user_id)
-
     async function handleSubmit(e) {
         e.preventDefault();
 
-        const slug = slugify(title);
+        const baseSlug = slugify(title);
+        const slug = await makeUniqueSlug(baseSlug);
 
         // create object structure to send to database
         const newRecipe = {
@@ -84,6 +83,29 @@ export default function NewRecipe() {
 
         //success: navigate to recipe
         navigate(`/recipes/${recipe.slug}`)
+    }
+
+    async function makeUniqueSlug(baseSlug) {
+        if (!baseSlug) return "";
+
+        const { data, error } = await supabase
+            .from("recipes")
+            .select("slug")
+            .eq("user_id", user_id)
+            .like("slug", `${baseSlug}%`);
+
+        if (error) {
+            console.log("Failed to check slug uniqueness:", error.message)
+            return baseSlug;
+        }
+
+        const existing = new Set((data ?? []).map((r) => r.slug));
+
+        if (!existing.has(baseSlug)) return baseSlug;
+
+        let n = 2;
+        while (existing.has(`${baseSlug}-${n}`)) n += 1;
+        return `${baseSlug}-${n}`;
     }
 
     function slugify(str) {
