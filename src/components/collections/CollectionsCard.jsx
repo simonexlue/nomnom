@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export function CollectionsCard({ collection }) {
+export default function CollectionsCard({ collection }) {
   const dateLabel = collection.created_at
     ? new Date(collection.created_at).toLocaleDateString()
     : "";

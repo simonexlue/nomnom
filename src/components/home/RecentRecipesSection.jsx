@@ -5,9 +5,7 @@ export default function RecentRecipesSection({
   loading = false,
   recipes = [],
 }) {
-  const primaryBtn =
-    "inline-flex items-center rounded-xl bg-yellow-400 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-yellow-300 hover:shadow active:scale-[0.98] transition";
-
+  
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
@@ -15,13 +13,25 @@ export default function RecentRecipesSection({
           Recent Recipes
         </h2>
 
+      <div className="flex items-center gap-2">
         <Link
           to="/recipes"
-          className="text-sm font-medium text-gray-600 underline underline-offset-4
-             transition hover:text-yellow-600"
+          className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm
+                    hover:bg-gray-50 hover:text-gray-900 transition"
         >
           View all
         </Link>
+
+        <span className="h-4 w-px bg-gray-200" />
+
+        <Link
+          to="/recipes/new"
+          className="inline-flex items-center rounded-xl bg-yellow-400 px-3 py-1.5 text-sm font-medium text-black shadow-sm
+                    hover:bg-yellow-300 hover:shadow transition"
+        >
+          + Add
+        </Link>
+      </div>
       </div>
 
       {loading ? (
