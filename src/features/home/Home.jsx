@@ -43,7 +43,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
