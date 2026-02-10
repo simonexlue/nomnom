@@ -1,5 +1,8 @@
 import { useAuth } from "../../app/AuthProvider"
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { FaAngleDown } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
 
 export default function NewRecipe() {
     const [title, setTitle] = useState("");
@@ -11,13 +14,84 @@ export default function NewRecipe() {
     const [tagsInput, setTagsInput] = useState("");
     const [tagsList, setTagsList] = useState([]);
 
+    const [collection, setCollection] = useState([])
+    const [selectedCollectionId, setSelectedCollectionId] = useState("")
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        async function fetchCollectionNames() {
+            const { data, error } = await supabase
+                .from("collections")
+                .select("id, name")
+
+            if (error) {
+                console.log("failed to load collections:", error)
+                return;
+            }
+            setCollection(data ?? [])
+        }
+
+        fetchCollectionNames()
+    }, [])
+
     // const {user} = useAuth();
     const user_id = useAuth().user.id
 
     // console.log(user_id)
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
+
+        const slug = slugify(title);
+
+        // create object structure to send to database
+        const newRecipe = {
+            user_id,
+            title,
+            ingredients: ingredientsList,
+            steps: stepsList,
+            notes: notes || null,
+            tags: tagsList || [],
+            slug
+        }
+        // send object to database
+
+        const { data: recipe, error } = await supabase
+            .from("recipes")
+            .insert(newRecipe)
+            .select("id, slug")
+            .single()
+
+        if (error) {
+            console.log("Create recipe failed:", error.message)
+            return;
+        }
+
+        // if user picked a collection, link it
+        if (selectedCollectionId) {
+            const { error: linkError } = await supabase
+                .from("collection_recipes")
+                .insert({
+                    user_id,
+                    collection_id: selectedCollectionId,
+                    recipe_id: recipe.id
+                })
+            if (linkError) {
+                console.log("Failed to link to collection:", linkError)
+            }
+        }
+
+        //success: navigate to recipe
+        navigate(`/recipes/${recipe.slug}`)
+    }
+
+    function slugify(str) {
+        return str
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, "")
+            .replace(/\s+/g, "-");
     }
 
     function addIngredients(e) {
@@ -68,6 +142,7 @@ export default function NewRecipe() {
 
     const tooltip =
         "pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[11px] text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+
     return (
         <div className="space-y-6">
             {/* HEADER */}
@@ -250,6 +325,32 @@ export default function NewRecipe() {
                                 ))}
                             </div>}
                     </div>
+
+                    {/* Collection dropdown */}
+                    <div className="space-y-1 mt-2">
+                        <span className="text-xs font-medium text-gray-500">Add to Collection (optional)</span>
+                        <div className="relative">
+                            <select
+                                className={`${inputClass} appearance-none pr-14`}
+                                value={selectedCollectionId}
+                                onChange={(e) => setSelectedCollectionId(e.target.value)}
+                            >
+                                <option value="">No Collection</option>
+                                {collection.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                            <FaAngleDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" />
+                        </div>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                        className="mt-4 w-full rounded-xl bg-yellow-300 py-2.5 font-semibold text-gray-900 hover:bg-yellow-400"
+                        type="submit"
+                    >
+                        Create Recipe
+                    </button>
                 </form>
             </div >
         </div >

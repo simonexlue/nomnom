@@ -6,6 +6,7 @@ import NewRecipe from "../features/recipes/NewRecipe";
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
 import { AppLayout } from "../components/layout/AppLayout";
+import RecipeDetails from "../features/recipes/RecipeDetails";
 
 // Optional placeholders so your nav links don't 404
 function ComingSoon({ title }) {
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
       // Replace these with real pages later
       { path: "recipes", element: <ComingSoon title="Recipes" /> },
       { path: "recipes/new", element: <NewRecipe /> },
+      { path: "recipes/:slug", element: <RecipeDetails /> },
       { path: "collections", element: <ComingSoon title="Collections" /> },
     ],
   },
