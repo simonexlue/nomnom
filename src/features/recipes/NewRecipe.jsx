@@ -5,7 +5,8 @@ export default function NewRecipe() {
     const [title, setTitle] = useState("");
     const [ingredientsList, setIngredientsList] = useState([]);
     const [ingredientsInput, setIngredientsInput] = useState("");
-    const [steps, setSteps] = useState("");
+    const [stepsInput, setStepsInput] = useState("");
+    const [stepsList, setStepsList] = useState([]);
     const [notes, setNotes] = useState("");
     const [tags, setTags] = useState("");
 
@@ -32,6 +33,18 @@ export default function NewRecipe() {
 
     function removeIngredient(indexToRemove) {
         setIngredientsList((prev) => prev.filter((_, i) => i !== indexToRemove))
+    }
+
+    function addSteps(e) {
+        if (e) e.preventDefault()
+        const nextStep = stepsInput.trim();
+        if (!nextStep) return;
+        setStepsList((prev) => [...prev, nextStep])
+        setStepsInput("")
+    }
+
+    function removeStep(indexToRemove) {
+        setStepsList((prev) => prev.filter((_, i) => i !== indexToRemove))
     }
 
     const inputClass =
@@ -88,7 +101,7 @@ export default function NewRecipe() {
                             <button
                                 type="button"
                                 onClick={addIngredients}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full font-bold text-gray-900 hover:bg-yellow-300"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full text-gray-900 hover:bg-yellow-300"
                                 aria-label="Add ingredient"
                                 title="Add ingredient"
                             >
@@ -114,14 +127,60 @@ export default function NewRecipe() {
                                     </span>
                                 ))}
                             </div>}
+                    </div>
+                    {/* recipes.steps */}
+                    <div className="space-y-1">
+                        <span className="text-xs font-medium text-gray-500">Steps</span>
+                        <div className="relative">
+                            <input
+                                className={`${inputClass} pr-12`}
+                                type="text"
+                                placeholder="Add dry ingredients to a mixing bowl..."
+                                value={stepsInput}
+                                onChange={(e) => setStepsInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        addSteps(e);
+                                    }
+                                }}
+                            />
+
+                            <button
+                                type="button"
+                                onClick={addSteps}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full text-gray-900 hover:bg-yellow-300"
+                                aria-label="Add step"
+                                title="Add step"
+                            >
+                                +
+                            </button>
+                        </div>
+                        {stepsList.length > 0 && (
+                            <ol className="list-decimal w-full bg-gray-200 rounded-xl px-8 py-2">
+                                {stepsList.map((step, index) => (
+                                    <li key={`step-${index}`} className="py-1 text-sm text-gray-900">
+                                        <div className="flex justify-between items-center">
+                                            <span>{step}</span>
+                                            <button
+                                                type="button"
+                                                className="rounded-xl bg-yellow-300 px-2.5 text-sm shadow-sm hover:bg-yellow-400 hover:shadow active:scale-[0.98] transition cursor-pointer"
+                                                onClick={() => removeStep(index)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
 
 
                     </div>
-                    {/* recipes.steps */}
                     {/* recipes.notes (optional) */}
                     {/* recipes.tags (optional) */}
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
