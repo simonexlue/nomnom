@@ -1,7 +1,14 @@
 import RecentRecipesSection from "../../components/home/RecentRecipesSection";
 import CollectionsSection from "../../components/home/CollectionsSection";
+import { useEffect, useState } from "react";
+import { getAllRecipes } from "../../lib/recipes";
+import { useAuth } from "../../app/AuthProvider";
 
 export default function Home() {
+  const [recipeData, setRecipeData] = useState([]);
+  const [recipeLoading, setRecipeLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState("");
+  const userId = useAuth().user.id
   const loading = false;
   const collections = [
     {
@@ -24,23 +31,23 @@ export default function Home() {
     },
   ];
 
-  const recipes = [
-    {
-      id: "1",
-      title: "Spicy Peanut Noodles",
-      notes:
-        "10 min weeknight meal. Add cucumber + chili oil. PLUS A WHOLE LOT OF OTHER STUFF",
-      tags: ["dinner", "quick"],
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "Air Fryer Salmon",
-      notes: null,
-      tags: ["healthy"],
-      updated_at: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ];
+  useEffect(() => {
+    setRecipeError("")
+    setRecipeLoading(true)
+    async function loadAllRecipes() {
+      try {
+        const data = await getAllRecipes({ userId });
+        setRecipeData(data)
+      } catch (error) {
+        setRecipeError("Error fetching all recipes.")
+      } finally {
+        setRecipeLoading(false)
+      }
+    }
+    loadAllRecipes();
+  }, [])
+
+  console.log(recipeData)
 
   return (
     <div className="space-y-6">
@@ -53,7 +60,7 @@ export default function Home() {
       </div>
 
       {/* Sections */}
-      <RecentRecipesSection loading={loading} recipes={recipes} />
+      <RecentRecipesSection loading={recipeLoading} recipes={recipeData} />
       <CollectionsSection loading={loading} collections={collections} />
     </div>
   );

@@ -14,3 +14,17 @@ export async function getRecipe( {slug, userId}) {
 
     return data;
 }
+
+export async function getAllRecipes({userId}) {
+    const {data, error} = await supabase
+        .from("recipes")
+        .select()
+        .eq("user_id", userId)
+        .order("created_at", {ascending: false})
+
+    if (error) {
+        throw error
+    }
+
+    return data;
+}
