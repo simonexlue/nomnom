@@ -59,7 +59,7 @@ export default function RecipeDetails() {
     return (
         <div className="space-y-6">
             {/* HEADER (non-scrollable) */}
-            <div className="space-y-3">
+            <div className="sticky top-0 z-20 space-y-3 mb-4 bg-gray-100 pb-4">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
@@ -68,7 +68,7 @@ export default function RecipeDetails() {
                         <div className="mt-2 h-1 w-10 rounded-full bg-yellow-400" />
 
                         {tags.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className="mt-4 flex flex-wrap gap-2">
                                 {tags.map((tag, idx) => (
                                     <span key={`${tag}-${idx}`} className={pillClass}>
                                         {tag}
@@ -90,7 +90,7 @@ export default function RecipeDetails() {
             </div>
 
             {/* SCROLLABLE CONTENT */}
-            <div className="space-y-6 overflow-y-auto pr-1 max-h-[calc(100vh-220px)]">
+            <div className="space-y-6">
                 {/* PREP / COOK / SERVES SECTION */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

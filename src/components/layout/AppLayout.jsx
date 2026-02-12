@@ -3,16 +3,16 @@ import { SideNav } from "./SideNav";
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="w-full px-4 py-6 ">
-        <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
+    <div className="h-screen bg-gray-100">
+      <div className="h-full w-full px-4 py-6">
+        <div className="grid h-full gap-4 lg:grid-cols-[240px_1fr]">
           {/* Sidebar hidden on mobile */}
-          <aside className="hidden lg:block">
+          <aside className="hidden lg:block h-full">
             <SideNav />
           </aside>
 
           {/* Page content renders here */}
-          <main className="min-w-0">
+          <main className="min-w-0 h-full overflow-y-auto pr-1">
             <Outlet />
           </main>
         </div>
