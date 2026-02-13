@@ -59,6 +59,18 @@ export default function Home() {
         <div className="mt-2 h-1 w-10 rounded-full bg-yellow-400" />
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        <div className="rounded-full bg-white/70 px-3 py-1 text-sm text-gray-700 ring-1 ring-black/5">
+          🍽️ {recipeData.length} recipes
+        </div>
+        <div className="rounded-full bg-white/70 px-3 py-1 text-sm text-gray-700 ring-1 ring-black/5">
+          📚 {collectionData.length} collections
+        </div>
+        <div className="rounded-full bg-white/70 px-3 py-1 text-sm text-gray-700 ring-1 ring-black/5">
+          ⭐ Keep saving your favorites
+        </div>
+      </div>
+
       {/* Sections */}
       <RecentRecipesSection loading={recipeLoading} recipes={recipeData} />
       <CollectionsSection loading={collectionLoading} collections={collectionData} />

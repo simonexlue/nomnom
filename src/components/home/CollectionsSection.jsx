@@ -14,7 +14,7 @@ export default function CollectionsSection({
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 pl-0.5">
           Collections
         </h2>
 
@@ -27,7 +27,7 @@ export default function CollectionsSection({
             View all
           </Link>
 
-           <span className="h-4 w-px bg-gray-200" />
+          <span className="h-4 w-px bg-gray-200" />
 
           <Link
             to="/collections/new"
@@ -40,10 +40,22 @@ export default function CollectionsSection({
       </div>
 
       {loading ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-44 animate-pulse rounded-2xl bg-gray-100" />
-          ))}
+        <div className="mt-4">
+          <div className="flex gap-3 overflow-x-auto pb-2 scroll-hover">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="
+                  h-44 animate-pulse rounded-2xl bg-gray-100
+                  shrink-0
+                  w-full
+                  sm:w-[calc((100%-0.75rem)/2)]
+                  lg:w-[calc((100%-1.5rem)/3)]
+                  xl:w-[calc((100%-3.75rem)/6)]
+                "
+              />
+            ))}
+          </div>
         </div>
       ) : collections.length === 0 ? (
         <div className="mt-4 rounded-2xl bg-gray-50 p-6 ring-1 ring-black/5">
@@ -58,10 +70,29 @@ export default function CollectionsSection({
           </div>
         </div>
       ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {collections.map((c) => (
-            <CollectionCard key={c.id} collection={c} />
-          ))}
+        <div className="mt-4">
+          <div
+            className="
+              flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory
+              pl-0.5 pr-0.5 scroll-pl-2 scroll-pr-2 py-2
+              xl:grid xl:grid-cols-6 xl:gap-3 xl:overflow-visible xl:snap-none
+            "
+          >
+            {collections.slice(0, 6).map((c) => (
+              <div
+                key={c.id}
+                className="
+                  shrink-0 snap-start
+                  w-full
+                  sm:w-[calc((100%-0.75rem)/2)]
+                  lg:w-[calc((100%-1.5rem)/3)]
+                  xl:w-auto xl:shrink xl:snap-none
+                "
+              >
+                <CollectionCard collection={c} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>

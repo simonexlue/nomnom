@@ -7,10 +7,10 @@ export default function RecentRecipesSection({
 }) {
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-          Recent Recipes
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 pl-0.5">
+          Recipes
         </h2>
 
         <div className="flex items-center gap-2">
@@ -53,21 +53,21 @@ export default function RecentRecipesSection({
         <div className="mt-4">
           <div
             className="
-        flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory
-        px-1 py-1 -mx-1 -my-1
-        xl:grid xl:grid-cols-6 xl:gap-3 xl:overflow-visible xl:snap-none
-      "
+    flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory
+    pl-0.5 pr-0.5 scroll-pl-2 scroll-pr-2 py-2
+    xl:grid xl:grid-cols-6 xl:gap-3 xl:overflow-visible xl:snap-none
+  "
           >
             {recipes.slice(0, 6).map((r) => (
               <div
                 key={r.id}
                 className="
-            shrink-0 snap-start
-            w-full
-            sm:w-[calc((100%-0.75rem)/2)]
-            lg:w-[calc((100%-1.5rem)/3)]
-            xl:w-auto xl:shrink xl:snap-none
-          "
+        shrink-0 snap-start
+        w-full
+        sm:w-[calc((100%-0.75rem)/2)]
+        lg:w-[calc((100%-1.5rem)/3)]
+        xl:w-auto xl:shrink xl:snap-none
+      "
               >
                 <RecipeCard recipe={r} />
               </div>
