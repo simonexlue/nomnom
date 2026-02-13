@@ -7,8 +7,8 @@ export default function RecentRecipesSection({
 }) {
 
   return (
-    <section className="rounded-2xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
-      <div className="flex items-center justify-between">
+    <section >
+      <div className="flex items-center justify-between ">
         <h2 className="text-lg font-semibold tracking-tight text-gray-900 pl-0.5">
           Recipes
         </h2>
@@ -50,7 +50,7 @@ export default function RecentRecipesSection({
           </p>
         </div>
       ) : (
-        <div className="mt-4">
+        <div className="mt-0">
           <div
             className="
     flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory
