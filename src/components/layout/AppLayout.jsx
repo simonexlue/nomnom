@@ -3,7 +3,7 @@ import { SideNav } from "./SideNav";
 
 export function AppLayout() {
   return (
-    <div className="h-screen bg-white">
+    <div className="h-screen bg-[#f4efe4]">
       <div className="h-full w-full px-4 py-6">
         <div className="grid h-full gap-4 lg:grid-cols-[240px_1fr]">
           {/* Sidebar hidden on mobile */}

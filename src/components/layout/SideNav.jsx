@@ -1,32 +1,56 @@
 import { NavLink } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
+import { useState } from "react";
 
 export function SideNav() {
+  const [q, setQ] = useState("");
+
   const base =
     "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition";
-  const inactive = "text-gray-700 hover:bg-gray-100";
-  const active = "bg-gray-100 text-gray-900";
+  const inactive =
+    "text-white/80 hover:bg-white/10 hover:text-white";
+  const active =
+    "bg-white/12 text-white";
 
   const primaryBtn =
-    "w-full rounded-xl bg-yellow-400 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-yellow-300 hover:shadow active:scale-[0.98] transition";
+    "w-full rounded-xl bg-yellow-400 px-4 py-2 text-sm font-semibold text-black shadow-sm hover:bg-yellow-300 hover:shadow active:scale-[0.98] transition";
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    // ProtectedRoute will redirect when session becomes null
   }
 
   return (
-    <nav className="flex h-[calc(100vh-3rem)] flex-col rounded-2xl border border-gray-200 bg-white p-4">
+    <nav className="flex h-[calc(100vh-3rem)] flex-col rounded-3xl bg-[#7e8f7a] p-4 shadow-lg ring-1 ring-black/10">
       <div>
+        {/* Brand */}
         <div className="mb-4">
-          <div className="text-base font-semibold tracking-tight text-gray-900">
-            NomNom
-          </div>
-          <div className="mt-1 text-xs text-gray-500">
-            Your recipes, organized
+          <div className="flex items-center gap-2">
+
+            <div>
+              <div className="text-base font-semibold tracking-tight text-white">
+                NomNom
+              </div>
+              <div className="text-xs text-white/70">
+                Your recipes, organized
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Search (visual only for now) */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 rounded-xl bg-white/20 px-3 py-2 ring-1 ring-white/15">
+            <span className="text-white/70">⌕</span>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search"
+              className="w-full bg-transparent text-sm text-white placeholder:text-white/60 outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Nav */}
         <div className="space-y-1">
           <NavLink
             to="/"
@@ -38,7 +62,6 @@ export function SideNav() {
             Home
           </NavLink>
 
-          {/* ADD LATER X2 */}
           <NavLink
             to="/recipes"
             className={({ isActive }) =>

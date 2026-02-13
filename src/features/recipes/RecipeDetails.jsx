@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getRecipe } from "../../lib/recipes";
 import { useAuth } from "../../app/AuthProvider";
+import { getSignedImageUrl } from "../../lib/storage";
 
 export default function RecipeDetails() {
     const { slug } = useParams();
@@ -9,6 +10,7 @@ export default function RecipeDetails() {
 
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [imageUrl, setImageUrl] = useState(null)
 
     useEffect(() => {
         async function loadRecipe() {
@@ -21,6 +23,12 @@ export default function RecipeDetails() {
                 });
 
                 setRecipe(data);
+
+                if (data?.image_path) {
+                    const url = await getSignedImageUrl(data.image_path);
+                    setImageUrl(url);
+                }
+                console.log(data)
             } catch (error) {
                 console.log(error.message);
                 setRecipe(null);
@@ -59,7 +67,7 @@ export default function RecipeDetails() {
     return (
         <div className="space-y-6">
             {/* HEADER (non-scrollable) */}
-            <div className="sticky top-0 z-20 space-y-3 mb-4 bg-gray-100 pb-4">
+            <div className="sticky top-0 z-20 space-y-3 mb-4 bg-[#f4efe4] pb-4">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
@@ -92,7 +100,7 @@ export default function RecipeDetails() {
             {/* SCROLLABLE CONTENT */}
             <div className="space-y-6">
                 {/* PREP / COOK / SERVES SECTION */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div className="rounded-xl bg-gray-100 p-4 text-center">
                             <p className="text-xs font-medium text-gray-500">Prep</p>
@@ -118,25 +126,27 @@ export default function RecipeDetails() {
                     <div className="space-y-6">
                         {/* PHOTO */}
                         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 shadow-sm">
-                            <div className="aspect-[4/3] p-6">
-                                <div className="grid h-full w-full place-items-center rounded-2xl border-2 border-dashed border-gray-200 bg-white/60">
-                                    <div className="text-center">
-                                        <p className="text-sm font-semibold text-gray-800">
-                                            Add a photo
-                                        </p>
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            Visualizing photo
-                                        </p>
-                                        {/* Upload button will be put in edit later */}
-                                        <button
-                                            type="button"
-                                            className="mt-4 rounded-xl bg-yellow-300 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
-                                        >
-                                            Upload
-                                        </button>
+                            <div className="aspect-[4/3]">
+                                {imageUrl ? (
+                                    <img
+                                        src={imageUrl}
+                                        alt={recipe.title}
+                                        className="h-full w-full object-cover rounded-2xl"
+                                    />
+                                ) : (
+                                    <div className="grid h-full w-full place-items-center rounded-2xl border-2 border-dashed border-gray-200 bg-white/60">
+                                        <div className="text-center">
+                                            <p className="text-sm font-semibold text-gray-800">
+                                                No photo added
+                                            </p>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Add one in edit mode
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
+
                         </div>
 
                         {/* NOTES */}

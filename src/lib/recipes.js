@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient";
 export async function getRecipe( {slug, userId}) {
     const {data, error} = await supabase
         .from("recipes")
-        .select("id, title, ingredients, steps, notes, tags, slug, created_at")
+        .select("id, title, ingredients, steps, notes, tags, slug, created_at, image_path")
         .eq("slug", slug)
         .eq("user_id", userId)
         .single();
