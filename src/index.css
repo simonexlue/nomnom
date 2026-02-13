@@ -3,3 +3,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* ✅ No layout shift: scrollbar space is always reserved */
+
+/* Firefox */
+.scroll-hover {
+    scrollbar-width: thin;
+    /* always reserve */
+    scrollbar-color: transparent transparent;
+    /* hide thumb + track */
+}
+
+.scroll-hover:hover {
+    scrollbar-color: #d1d5db transparent;
+    /* show thumb on hover */
+}
+
+/* Chrome / Safari */
+.scroll-hover::-webkit-scrollbar {
+    height: 6px;
+    /* always reserve */
+}
+
+.scroll-hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-hover::-webkit-scrollbar-thumb {
+    background: transparent;
+    /* hidden by default */
+    border-radius: 9999px;
+}
+
+.scroll-hover:hover::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    /* visible on hover */
+}

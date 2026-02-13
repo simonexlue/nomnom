@@ -7,7 +7,7 @@ export function RecipeCard({ recipe }) {
 
   return (
     <Link
-      to={`/recipes/${recipe.id}`}
+      to={`/recipes/${recipe.slug}`}
       className="group block h-44 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 transition
              hover:shadow-md hover:ring-yellow-300"
     >

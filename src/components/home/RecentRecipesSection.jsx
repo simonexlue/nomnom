@@ -35,11 +35,11 @@ export default function RecentRecipesSection({
       </div>
 
       {loading ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-44 animate-pulse rounded-2xl bg-gray-100"
+              className="h-44 shrink-0 w-[calc((100%-1.5rem)/3)] animate-pulse rounded-2xl bg-gray-100"
             />
           ))}
         </div>
@@ -50,10 +50,29 @@ export default function RecentRecipesSection({
           </p>
         </div>
       ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {recipes.map((r) => (
-            <RecipeCard key={r.id} recipe={r} />
-          ))}
+        <div className="mt-4">
+          <div
+            className="
+        flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory
+        px-1 py-1 -mx-1 -my-1
+        xl:grid xl:grid-cols-6 xl:gap-3 xl:overflow-visible xl:snap-none
+      "
+          >
+            {recipes.slice(0, 6).map((r) => (
+              <div
+                key={r.id}
+                className="
+            shrink-0 snap-start
+            w-full
+            sm:w-[calc((100%-0.75rem)/2)]
+            lg:w-[calc((100%-1.5rem)/3)]
+            xl:w-auto xl:shrink xl:snap-none
+          "
+              >
+                <RecipeCard recipe={r} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>
