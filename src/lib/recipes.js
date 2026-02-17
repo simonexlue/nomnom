@@ -28,3 +28,16 @@ export async function getAllRecipes({userId}) {
 
     return data;
 }
+
+export async function updateRecipe({ id, userId, updates }) {
+  const { data, error } = await supabase
+    .from("recipes")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select("id, title, ingredients, steps, notes, tags, slug, created_at, image_path")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
