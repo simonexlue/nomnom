@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { getRecipe, updateRecipe } from "../../lib/recipes";
+import { getRecipe, updateRecipe, deleteRecipe } from "../../lib/recipes";
 import { useAuth } from "../../app/AuthProvider";
 import { getSignedImageUrl } from "../../lib/storage";
 
@@ -39,6 +39,10 @@ export default function RecipeDetails() {
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState("");
     const [removeImage, setRemoveImage] = useState(false);
+
+    // delete
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         async function loadRecipe() {
@@ -353,6 +357,37 @@ export default function RecipeDetails() {
         }
     }
 
+    async function handleDelete() {
+        try {
+            setDeleting(true)
+
+            //remove image from storage if it exists
+            if (recipe?.image_path) {
+                const { error: removeErr } = await supabase.storage
+                    .from("recipe-images")
+                    .remove([recipe.image_path]);
+
+                if (removeErr) console.log("Failed to remove image:", removeErr.message)
+                //keep going even if storage remove fails
+            }
+
+            // delete recipe row
+            await deleteRecipe({
+                id: recipe.id,
+                userId: user.id,
+            })
+
+            //nav back to recipes list
+            navigate("/recipes");
+
+        } catch (error) {
+            console.log(error.message)
+        } finally {
+            setDeleting(false)
+            setShowDeleteConfirm(false)
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* HEADER (non-scrollable) */}
@@ -445,13 +480,23 @@ export default function RecipeDetails() {
 
                     <div className="shrink-0 flex items-center gap-2">
                         {!isEditing ? (
-                            <button
-                                type="button"
-                                onClick={startEdit}
-                                className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
-                            >
-                                Edit
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={startEdit}
+                                    className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black active:scale-[0.98] transition"
+                                >
+                                    Delete
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <button
@@ -819,6 +864,40 @@ export default function RecipeDetails() {
                     </div>
                 </div>
             </div>
+
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <h3 className="text-lg font-semibold text-gray-900">Delete recipe?</h3>
+
+                        <p className="mt-2 text-sm text-gray-600">
+                            This will permanently delete <span className="font-semibold">{recipe.title}</span>.
+                            <span className="font-semibold text-gray-900"> This cannot be undone.</span>
+                        </p>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200 disabled:opacity-60 transition"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={handleDelete}
+                                className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
+                            >
+                                {deleting ? "Deleting..." : "Delete"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
