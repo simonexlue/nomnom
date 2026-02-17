@@ -66,9 +66,6 @@ export default function Home() {
         <div className="rounded-full bg-white/70 px-3 py-1 text-sm text-gray-700 ring-1 ring-black/5">
           📚 {collectionData.length} collections
         </div>
-        <div className="rounded-full bg-white/70 px-3 py-1 text-sm text-gray-700 ring-1 ring-black/5">
-          ⭐ Keep saving your favorites
-        </div>
       </div>
 
       {/* Sections */}

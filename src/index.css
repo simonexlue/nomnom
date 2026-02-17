@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 
-/* ✅ No layout shift: scrollbar space is always reserved */
+/* No layout shift: scrollbar space is always reserved */
 
 /* Firefox */
 .scroll-hover {

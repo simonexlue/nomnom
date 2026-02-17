@@ -59,24 +59,31 @@ export function RecipeCard({ recipe }) {
 
         {/* FOOTER */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            {recipe.tags?.length ? (
-              recipe.tags.slice(0, 2).map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-gray-900"
-                >
-                  {t}
+          {/* Reserve space for tags */}
+          <div className="min-h-[28px] max-h-[28px] overflow-hidden">
+            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {recipe.tags?.length ? (
+                recipe.tags.slice(0, 6).map((t) => (
+                  <span
+                    key={t}
+                    className="shrink-0 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-gray-900"
+                  >
+                    {t}
+                  </span>
+                ))
+              ) : (
+                <span className="invisible shrink-0 rounded-full px-2 py-1 text-xs font-medium">
+                  placeholder
                 </span>
-              ))
-            ) : null}
+              )}
+            </div>
           </div>
 
           {dateLabel ? (
-            <span className="shrink-0 text-xs text-gray-500">
-              {dateLabel}
-            </span>
-          ) : null}
+            <span className="shrink-0 text-xs leading-6 text-gray-500">{dateLabel}</span>
+          ) : (
+            <span className="invisible shrink-0 text-xs leading-6">date</span>
+          )}
         </div>
       </div>
     </Link>

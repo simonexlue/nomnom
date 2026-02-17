@@ -35,7 +35,7 @@ export default function RecentRecipesSection({
       </div>
 
       {loading ? (
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+        <div className="mt-2 flex gap-3 overflow-x-auto pb-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -44,13 +44,13 @@ export default function RecentRecipesSection({
           ))}
         </div>
       ) : recipes.length === 0 ? (
-        <div className="mt-4 rounded-2xl bg-gray-100 p-6 ring-1 ring-black/5">
+        <div className="mt-2 rounded-2xl bg-gray-100 p-6 ring-1 ring-black/5">
           <p className="text-sm text-gray-600">
             No recipes yet → Add your first recipe
           </p>
         </div>
       ) : (
-        <div className="mt-0">
+        <div className="mt-2">
           <div
             className="
     flex gap-3 overflow-x-auto scroll-hover snap-x snap-mandatory

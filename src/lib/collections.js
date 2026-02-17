@@ -13,3 +13,21 @@ export async function getAllCollections({userId}) {
 
     return data;
 }
+
+export async function createCollection({userId, name, description}) {
+    const {data, error} = await supabase
+        .from("collections")
+        .insert({
+            user_id: userId,
+            name,
+            description: description || null,
+        })
+        .select("id")
+        .single()
+
+    if(error) {
+        throw new Error(error.message)
+    }
+
+    return data;
+}

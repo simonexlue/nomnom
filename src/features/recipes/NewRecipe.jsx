@@ -113,7 +113,7 @@ export default function NewRecipe() {
             return;
         }
 
-        // ✅ STEP 3: upload image + save image_path
+        // upload image + save image_path
         if (imageFile) {
             const allowed = ["image/jpeg", "image/png", "image/webp"]
             if (!allowed.includes(imageFile.type)) {
