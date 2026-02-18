@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { getRecipe, updateRecipe, deleteRecipe } from "../../lib/recipes";
 import { useAuth } from "../../app/AuthProvider";
 import { getSignedImageUrl } from "../../lib/storage";
+import { getAllCollections, getRecipeCollectionIds, setRecipeCollections } from "../../lib/collections";
 
 export default function RecipeDetails() {
     const { slug } = useParams();
@@ -39,6 +40,11 @@ export default function RecipeDetails() {
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState("");
     const [removeImage, setRemoveImage] = useState(false);
+
+    // collections
+    const [allCollections, setAllCollections] = useState([]);
+    const [selectedCollectionIds, setSelectedCollectionIds] = useState([]);
+    const [draftCollectionIds, setDraftCollectionIds] = useState([]);
 
     // delete
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -85,6 +91,30 @@ export default function RecipeDetails() {
         if (user?.id && slug) loadRecipe();
     }, [user?.id, slug]);
 
+    // load collections 
+    useEffect(() => {
+        async function loadCollections() {
+            try {
+                const cols = await getAllCollections({ userId: user.id });
+                setAllCollections(cols);
+
+                if (!recipe?.id) {
+                    setSelectedCollectionIds([]);
+                    setDraftCollectionIds([]);
+                    return;
+                }
+
+                const ids = await getRecipeCollectionIds({ userId: user.id, recipeId: recipe.id });
+                setSelectedCollectionIds(ids);
+                setDraftCollectionIds(ids);
+            } catch (err) {
+                console.log(err.message);
+            }
+        }
+
+        if (user?.id) loadCollections();
+    }, [user?.id, recipe?.id]);
+
     useEffect(() => {
         if (!imageFile) {
             setPreviewUrl("");
@@ -124,8 +154,6 @@ export default function RecipeDetails() {
     async function makeUniqueSlugForUpdate(baseSlug, recipeId) {
         if (!baseSlug) return "";
 
-        // Pull all slugs for this user that begin with baseSlug
-        // ignore this recipe's current slug so renaming to same title doesn't force -2.
         const { data, error } = await supabase
             .from("recipes")
             .select("id, slug")
@@ -219,6 +247,12 @@ export default function RecipeDetails() {
         setDraftTags((prev) => prev.filter((_, i) => i !== idxToRemove));
     }
 
+    function toggleDraftCollection(id) {
+        setDraftCollectionIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+        );
+    }
+
     function startEdit() {
         setIsEditing(true);
 
@@ -228,6 +262,9 @@ export default function RecipeDetails() {
         setDraftIngredients(recipe.ingredients ?? []);
         setDraftSteps(recipe.steps ?? []);
         setDraftTags(recipe.tags ?? []);
+
+        // collections draft from current
+        setDraftCollectionIds(selectedCollectionIds);
 
         // image edit reset
         setImageFile(null);
@@ -244,6 +281,8 @@ export default function RecipeDetails() {
         setDraftIngredients(recipe.ingredients ?? []);
         setDraftSteps(recipe.steps ?? []);
         setDraftTags(recipe.tags ?? []);
+
+        setDraftCollectionIds(selectedCollectionIds);
 
         setImageFile(null);
         setPreviewUrl("");
@@ -301,7 +340,6 @@ export default function RecipeDetails() {
                     return;
                 }
 
-                // (optional but nice): if old path exists and is different, remove it to avoid orphan files
                 if (recipe.image_path && recipe.image_path !== filePath) {
                     const { error: oldRemoveErr } = await supabase.storage
                         .from("recipe-images")
@@ -319,7 +357,6 @@ export default function RecipeDetails() {
                 setRecipe(updated2);
                 const signed = await getSignedImageUrl(filePath);
                 setImageUrl(signed);
-
             } else if (removeImage && recipe.image_path) {
                 const { error: removeErr } = await supabase.storage
                     .from("recipe-images")
@@ -335,10 +372,18 @@ export default function RecipeDetails() {
 
                 setRecipe(updated2);
                 setImageUrl(null);
-
             } else {
                 setRecipe(updated);
             }
+
+            // 3) Collections (sync join table to match draft)
+            await setRecipeCollections({
+                userId: user.id,
+                recipeId: recipe.id,
+                collectionIds: draftCollectionIds,
+            });
+
+            setSelectedCollectionIds(draftCollectionIds);
 
             // clean up edit state
             setIsEditing(false);
@@ -359,34 +404,44 @@ export default function RecipeDetails() {
 
     async function handleDelete() {
         try {
-            setDeleting(true)
+            setDeleting(true);
 
-            //remove image from storage if it exists
+            // remove image from storage if it exists
             if (recipe?.image_path) {
                 const { error: removeErr } = await supabase.storage
                     .from("recipe-images")
                     .remove([recipe.image_path]);
 
-                if (removeErr) console.log("Failed to remove image:", removeErr.message)
-                //keep going even if storage remove fails
+                if (removeErr) console.log("Failed to remove image:", removeErr.message);
             }
+
+            // cleanup join table rows
+            const { error: joinErr } = await supabase
+                .from("collection_recipes")
+                .delete()
+                .eq("user_id", user.id)
+                .eq("recipe_id", recipe.id);
+
+            if (joinErr) console.log("Failed to remove recipe from collections:", joinErr.message);
 
             // delete recipe row
             await deleteRecipe({
                 id: recipe.id,
                 userId: user.id,
-            })
+            });
 
-            //nav back to recipes list
             navigate("/recipes");
-
         } catch (error) {
-            console.log(error.message)
+            console.log(error.message);
         } finally {
-            setDeleting(false)
-            setShowDeleteConfirm(false)
+            setDeleting(false);
+            setShowDeleteConfirm(false);
         }
     }
+
+    const selectedCollections = allCollections.filter((c) =>
+        selectedCollectionIds.includes(c.id),
+    );
 
     return (
         <div className="space-y-6">
@@ -418,7 +473,10 @@ export default function RecipeDetails() {
                             tags.length > 0 && (
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     {tags.map((tag, idx) => (
-                                        <span key={`${tag}-${idx}`} className="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-gray-900">
+                                        <span
+                                            key={`${tag}-${idx}`}
+                                            className="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-gray-900"
+                                        >
                                             {tag}
                                         </span>
                                     ))}
@@ -492,7 +550,7 @@ export default function RecipeDetails() {
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black active:scale-[0.98] transition"
+                                    className="rounded-xl bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-300 disabled:opacity-60 transition"
                                 >
                                     Delete
                                 </button>
@@ -548,7 +606,7 @@ export default function RecipeDetails() {
                 <div className="grid gap-6 xl:grid-cols-[2fr_3fr]">
                     {/* LEFT SIDE */}
                     <div className="space-y-6">
-                        {/* PHOTO / IMAGE EDIT (single panel) */}
+                        {/* PHOTO / IMAGE EDIT */}
                         <div
                             className={[
                                 "relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 shadow-sm",
@@ -581,7 +639,7 @@ export default function RecipeDetails() {
                                 ) : null}
 
                                 {/* 2) Existing image (only when not removed) */}
-                                {(!previewUrl && imageUrl && (!isEditing || (isEditing && !removeImage))) ? (
+                                {!previewUrl && imageUrl && (!isEditing || (isEditing && !removeImage)) ? (
                                     <>
                                         <img
                                             src={imageUrl}
@@ -615,9 +673,21 @@ export default function RecipeDetails() {
                                                 ? "border-yellow-300 bg-yellow-50/40"
                                                 : "border-gray-200 bg-white/60 hover:border-gray-300",
                                         ].join(" ")}
-                                        onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                                        onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                                        onDragEnter={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDragging(true);
+                                        }}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDragging(true);
+                                        }}
+                                        onDragLeave={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsDragging(false);
+                                        }}
                                         onDrop={onDropFile}
                                     >
                                         <div className="flex flex-col items-center text-center px-6">
@@ -668,18 +738,13 @@ export default function RecipeDetails() {
                             </div>
                         </div>
 
-
                         {/* NOTES */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-base font-semibold tracking-tight text-gray-900">
-                                Notes
-                            </h2>
+                            <h2 className="text-base font-semibold tracking-tight text-gray-900">Notes</h2>
 
                             {!isEditing ? (
                                 recipe.notes ? (
-                                    <p className="mt-3 text-sm leading-relaxed text-gray-800">
-                                        {recipe.notes}
-                                    </p>
+                                    <p className="mt-3 text-sm leading-relaxed text-gray-800">{recipe.notes}</p>
                                 ) : (
                                     <p className="mt-3 text-sm text-gray-500">No notes added yet.</p>
                                 )
@@ -697,6 +762,64 @@ export default function RecipeDetails() {
 
                     {/* RIGHT SIDE */}
                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                        {/* COLLECTIONS */}
+                        <div>
+                            <div className="flex items-baseline justify-between">
+                                <h3 className="text-base font-semibold text-gray-900">Collections</h3>
+                                <p className="text-xs text-gray-500">
+                                    {(isEditing ? draftCollectionIds : selectedCollectionIds).length} selected
+                                </p>
+                            </div>
+
+                            {!isEditing ? (
+                                selectedCollections.length === 0 ? (
+                                    <p className="mt-3 text-sm text-gray-500">No collection.</p>
+                                ) : (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {selectedCollections.map((c) => (
+                                            <span
+                                                key={c.id}
+                                                className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-900"
+                                            >
+                                                {c.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )
+                            ) : (
+                                <div className="mt-3">
+                                    {allCollections.length === 0 ? (
+                                        <p className="text-sm text-gray-500">No collections yet.</p>
+                                    ) : (
+                                        <div className="flex flex-col gap-2">
+                                            {allCollections.map((c) => {
+                                                const checked = draftCollectionIds.includes(c.id);
+                                                return (
+                                                    <label
+                                                        key={c.id}
+                                                        className={[
+                                                            "flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition cursor-pointer",
+                                                            checked ? "border-yellow-300 bg-yellow-50/40" : "border-gray-200 hover:bg-gray-50",
+                                                        ].join(" ")}
+                                                    >
+                                                        <span className="font-medium text-gray-900">{c.name}</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={checked}
+                                                            onChange={() => toggleDraftCollection(c.id)}
+                                                            className="h-4 w-4 accent-yellow-400"
+                                                        />
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="my-6 h-px w-full bg-gray-200" />
+
                         {/* INGREDIENTS */}
                         <div>
                             <div className="flex items-baseline justify-between">
@@ -709,9 +832,7 @@ export default function RecipeDetails() {
 
                             {!isEditing ? (
                                 ingredients.length === 0 ? (
-                                    <p className="mt-3 text-sm text-gray-500">
-                                        No ingredients added yet.
-                                    </p>
+                                    <p className="mt-3 text-sm text-gray-500">No ingredients added yet.</p>
                                 ) : (
                                     <ul className="mt-3 space-y-2">
                                         {ingredients.map((ingredient, idx) => (
@@ -763,14 +884,11 @@ export default function RecipeDetails() {
                                                     role="button"
                                                     tabIndex={0}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === "Enter" || e.key === " ")
-                                                            removeIngredient(index);
+                                                        if (e.key === "Enter" || e.key === " ") removeIngredient(index);
                                                     }}
                                                 >
                                                     {ingredient}
-                                                    <span className={tooltip}>
-                                                        Click to remove {ingredient}
-                                                    </span>
+                                                    <span className={tooltip}>Click to remove {ingredient}</span>
                                                 </span>
                                             ))}
                                         </div>
@@ -801,9 +919,7 @@ export default function RecipeDetails() {
                                                 key={`${step}-${idx}`}
                                                 className="flex gap-3 rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-900"
                                             >
-                                                <span className="min-w-[1.25rem] font-semibold text-gray-700">
-                                                    {idx + 1}.
-                                                </span>
+                                                <span className="min-w-[1.25rem] font-semibold text-gray-700">{idx + 1}.</span>
                                                 <span className="leading-relaxed">{step}</span>
                                             </li>
                                         ))}
@@ -840,10 +956,7 @@ export default function RecipeDetails() {
                                     {draftSteps.length > 0 && (
                                         <ol className="list-decimal w-full bg-gray-200 rounded-xl pl-8 pr-4 py-2 mt-2">
                                             {draftSteps.map((step, index) => (
-                                                <li
-                                                    key={`step-${index}`}
-                                                    className="py-1.5 text-sm text-gray-900"
-                                                >
+                                                <li key={`step-${index}`} className="py-1.5 text-sm text-gray-900">
                                                     <div className="flex justify-between items-start">
                                                         <span className="break-words min-w-0 pr-4">{step}</span>
                                                         <button
@@ -897,7 +1010,6 @@ export default function RecipeDetails() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }

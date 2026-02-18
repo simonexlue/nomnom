@@ -1,5 +1,6 @@
 import { useAuth } from "../../app/AuthProvider"
 import { useState, useEffect, useRef } from "react";
+import { getAllCollections } from "../../lib/collections";
 import { supabase } from "../../lib/supabaseClient";
 import { FaAngleDown } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +17,7 @@ export default function NewRecipe() {
     const [imageFile, setImageFile] = useState(null);
 
     const [collection, setCollection] = useState([])
-    const [selectedCollectionId, setSelectedCollectionId] = useState("")
+    const [selectedCollectionIds, setSelectedCollectionIds] = useState([])
 
     const user_id = useAuth().user.id
 
@@ -28,19 +29,16 @@ export default function NewRecipe() {
 
     useEffect(() => {
         async function fetchCollectionNames() {
-            const { data, error } = await supabase
-                .from("collections")
-                .select("id, name")
-
-            if (error) {
-                console.log("failed to load collections:", error)
-                return;
+            try {
+                const data = await getAllCollections({ userId: user_id });
+                setCollection(data);
+            } catch (err) {
+                console.log("failed to load collections:", err.message);
             }
-            setCollection(data ?? [])
         }
 
-        fetchCollectionNames()
-    }, [])
+        fetchCollectionNames();
+    }, []);
 
     useEffect(() => {
         if (!imageFile) {
@@ -148,16 +146,20 @@ export default function NewRecipe() {
         }
 
         // if user picked a collection, link it
-        if (selectedCollectionId) {
+        // link to collections (multi)
+        if (selectedCollectionIds.length > 0) {
+            const rows = selectedCollectionIds.map((collection_id) => ({
+                user_id,
+                collection_id,
+                recipe_id: recipe.id,
+            }));
+
             const { error: linkError } = await supabase
                 .from("collection_recipes")
-                .insert({
-                    user_id,
-                    collection_id: selectedCollectionId,
-                    recipe_id: recipe.id
-                })
+                .insert(rows);
+
             if (linkError) {
-                console.log("Failed to link to collection:", linkError)
+                console.log("Failed to link to collections:", linkError);
             }
         }
 
@@ -423,22 +425,43 @@ export default function NewRecipe() {
                             </div>}
                     </div>
 
-                    {/* Collection dropdown */}
+                    {/* Collections (multi-select) */}
                     <div className="space-y-1 mt-2">
-                        <span className="text-xs font-medium text-gray-500">Add to Collection (optional)</span>
-                        <div className="relative">
-                            <select
-                                className={`${inputClass} appearance-none pr-14`}
-                                value={selectedCollectionId}
-                                onChange={(e) => setSelectedCollectionId(e.target.value)}
-                            >
-                                <option value="">No Collection</option>
-                                {collection.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                            <FaAngleDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" />
-                        </div>
+                        <span className="text-xs font-medium text-gray-500">
+                            Add to Collections (optional)
+                        </span>
+
+                        {collection.length === 0 ? (
+                            <div className="mt-2 text-sm text-gray-600">No collections yet.</div>
+                        ) : (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {collection.map((c) => {
+                                    const active = selectedCollectionIds.includes(c.id);
+
+                                    return (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedCollectionIds((prev) =>
+                                                    prev.includes(c.id)
+                                                        ? prev.filter((x) => x !== c.id)
+                                                        : [...prev, c.id]
+                                                );
+                                            }}
+                                            className={[
+                                                "rounded-full px-3 py-1 text-xs font-medium transition border",
+                                                active
+                                                    ? "bg-yellow-100 border-yellow-300 text-gray-900"
+                                                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50",
+                                            ].join(" ")}
+                                        >
+                                            {c.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     {/* Image (drag + drop) */}

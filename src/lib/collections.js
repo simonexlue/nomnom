@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient";
 export async function getAllCollections({userId}) {
     const {data, error} = await supabase
         .from("collections")
-        .select()
+        .select("id, name")
         .eq("user_id", userId)
         .order("created_at", {ascending: false})
 
@@ -30,4 +30,61 @@ export async function createCollection({userId, name, description}) {
     }
 
     return data;
+}
+
+// --- NEW: join table helpers (collection_recipes) ---
+
+export async function getRecipeCollectionIds({ userId, recipeId }) {
+  const { data, error } = await supabase
+    .from("collection_recipes")
+    .select("collection_id")
+    .eq("user_id", userId)
+    .eq("recipe_id", recipeId);
+
+  if (error) throw error;
+  return (data ?? []).map((r) => r.collection_id);
+}
+
+export async function setRecipeCollections({ userId, recipeId, collectionIds }) {
+  const next = Array.from(new Set(collectionIds ?? []));
+
+  const { data: existingRows, error: existingErr } = await supabase
+    .from("collection_recipes")
+    .select("collection_id")
+    .eq("user_id", userId)
+    .eq("recipe_id", recipeId);
+
+  if (existingErr) throw existingErr;
+
+  const existing = new Set((existingRows ?? []).map((r) => r.collection_id));
+
+  const toAdd = next.filter((id) => !existing.has(id));
+  const toRemove = Array.from(existing).filter((id) => !next.includes(id));
+
+  if (toRemove.length > 0) {
+    const { error: delErr } = await supabase
+      .from("collection_recipes")
+      .delete()
+      .eq("user_id", userId)
+      .eq("recipe_id", recipeId)
+      .in("collection_id", toRemove);
+
+    if (delErr) throw delErr;
+  }
+
+  if (toAdd.length > 0) {
+    const payload = toAdd.map((collection_id) => ({
+      user_id: userId,
+      recipe_id: recipeId,
+      collection_id,
+    }));
+
+    const { error: insErr } = await supabase
+      .from("collection_recipes")
+      .insert(payload);
+
+    if (insErr) throw insErr;
+  }
+
+  return true;
 }
