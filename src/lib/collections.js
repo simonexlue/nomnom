@@ -1,9 +1,23 @@
 import { supabase } from "./supabaseClient";
 
+export async function getCollection({id, userId}) {
+    const {data, error} = await supabase
+        .from("collections")
+        .select("id, name, description, created_at, image_path")
+        .eq("id", id)
+        .eq("user_id", userId)
+        .single()
+
+    if(error) {
+        throw error
+    }
+    return data;
+}
+
 export async function getAllCollections({userId}) {
     const {data, error} = await supabase
         .from("collections")
-        .select("id, name")
+        .select("id, name, description, image_path")
         .eq("user_id", userId)
         .order("created_at", {ascending: false})
 
@@ -32,7 +46,20 @@ export async function createCollection({userId, name, description}) {
     return data;
 }
 
-// --- NEW: join table helpers (collection_recipes) ---
+export async function updateCollection({ id, userId, updates }) {
+  const { data, error } = await supabase
+    .from("collections")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select("id, name, description, created_at, image_path")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// join table helpers (collection_recipes)
 
 export async function getRecipeCollectionIds({ userId, recipeId }) {
   const { data, error } = await supabase

@@ -779,7 +779,7 @@ export default function RecipeDetails() {
                                         {selectedCollections.map((c) => (
                                             <span
                                                 key={c.id}
-                                                className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-900"
+                                                className="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-gray-900"
                                             >
                                                 {c.name}
                                             </span>

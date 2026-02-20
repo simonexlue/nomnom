@@ -71,7 +71,7 @@ export default function CollectionsSection({
         </div>
       ) : (
         <div className="mt-2 relative">
-          {/* right fade so it *feels* capped after ~3 cards */}
+          {/* right fade so it feels capped after ~3 cards */}
           <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-[#f4efe4] to-transparent" />
 
           <div
@@ -89,7 +89,7 @@ export default function CollectionsSection({
           sm:w-[420px]
         "
               >
-                <CollectionCard collection={c} variant="row" />
+                <CollectionCard collection={c} />
               </div>
             ))}
           </div>
