@@ -112,7 +112,7 @@ export default function CollectionDetails() {
                 if (recipesErr) throw recipesErr;
 
                 // 3) preserve order from join table
-                const byId = new Map(recipesData.map((r) => [r.id, r]));
+                const byId = new Map((recipesData ?? []).map((r) => [r.id, r]));
                 const ordered = recipeIds.map((rid) => byId.get(rid)).filter(Boolean);
 
                 setRecipes(ordered);
@@ -216,8 +216,7 @@ export default function CollectionDetails() {
                         .from("recipe-images")
                         .remove([collection.image_path]);
 
-                    if (oldRemoveErr)
-                        console.log("Failed to remove old image:", oldRemoveErr.message);
+                    if (oldRemoveErr) console.log("Failed to remove old image:", oldRemoveErr.message);
                 }
 
                 const updated2 = await updateCollection({
@@ -234,8 +233,7 @@ export default function CollectionDetails() {
                     .from("recipe-images")
                     .remove([collection.image_path]);
 
-                if (removeErr)
-                    console.log("Failed to remove image from storage:", removeErr.message);
+                if (removeErr) console.log("Failed to remove image from storage:", removeErr.message);
 
                 const updated2 = await updateCollection({
                     id: collection.id,
@@ -324,91 +322,6 @@ export default function CollectionDetails() {
 
     const topBoxH = "h-[320px] sm:h-[360px] md:h-[380px] lg:h-[420px]";
 
-    function DescriptionCard({ className = "" }) {
-        return (
-            <div
-                className={[
-                    "rounded-2xl border border-gray-200 bg-white shadow-sm p-6",
-                    className,
-                ].join(" ")}
-            >
-                <div className="flex items-baseline justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">Description</h3>
-                    <p className="text-xs text-gray-500">
-                        {collection.description ? "Added" : "None"}
-                    </p>
-                </div>
-
-                {!isEditing ? (
-                    collection.description ? (
-                        <p className="mt-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
-                            {collection.description}
-                        </p>
-                    ) : (
-                        <p className="mt-3 text-sm text-gray-500">
-                            Add a short description to remember what this collection is for.
-                        </p>
-                    )
-                ) : (
-                    <div className="mt-3">
-                        <div className="text-xs font-medium text-gray-500">
-                            Collection Description
-                        </div>
-                        <textarea
-                            value={draftDesc}
-                            onChange={(e) => setDraftDesc(e.target.value)}
-                            rows={10}
-                            className={[
-                                inputClass,
-                                "resize-none h-[240px] sm:h-[260px] md:h-[280px] lg:h-[320px]",
-                            ].join(" ")}
-                            placeholder="ex. Chicken broth base, quick soups, meal prep..."
-                        />
-                    </div>
-                )}
-
-                {error ? (
-                    <div className="mt-4 rounded-2xl bg-red-50 p-4 ring-1 ring-red-200">
-                        <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                ) : null}
-            </div>
-        );
-    }
-
-    function RecipesSection({ className = "" }) {
-        return (
-            <div className={className}>
-                <div className="flex items-baseline justify-between">
-                    <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-                        Recipes in this collection
-                    </h2>
-                    <span className="text-xs text-gray-500">
-                        {recipesLoading ? "…" : `${recipes.length} total`}
-                    </span>
-                </div>
-
-                <div className="mt-2 h-1 w-10 rounded-full bg-yellow-400" />
-
-                {recipesLoading ? (
-                    <p className="mt-4 text-sm text-gray-500">Loading recipes...</p>
-                ) : recipes.length === 0 ? (
-                    <p className="mt-4 text-sm text-gray-500">
-                        No recipes in this collection yet.
-                    </p>
-                ) : (
-                    <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {recipes.map((r) => (
-                            <div key={r.id} className="max-w-[190px]">
-                                <RecipeCard recipe={r} />
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-6">
             {/* HEADER */}
@@ -421,9 +334,7 @@ export default function CollectionDetails() {
                             </h1>
                         ) : (
                             <div>
-                                <div className="text-xs font-medium text-gray-500">
-                                    Collection Name
-                                </div>
+                                <div className="text-xs font-medium text-gray-500">Collection Name</div>
                                 <input
                                     className={inputClass}
                                     type="text"
@@ -499,12 +410,7 @@ export default function CollectionDetails() {
                                 {/* Preview */}
                                 {isEditing && previewUrl ? (
                                     <>
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="h-full w-full object-cover"
-                                            loading="lazy"
-                                        />
+                                        <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" loading="lazy" />
 
                                         <button
                                             type="button"
@@ -553,9 +459,7 @@ export default function CollectionDetails() {
                                     <div
                                         className={[
                                             "h-full w-full grid place-items-center border-2 border-dashed transition",
-                                            isDragging
-                                                ? "border-yellow-300 bg-yellow-50/40"
-                                                : "border-gray-200 bg-white/60 hover:border-gray-300",
+                                            isDragging ? "border-yellow-300 bg-yellow-50/40" : "border-gray-200 bg-white/60 hover:border-gray-300",
                                         ].join(" ")}
                                         onDragEnter={(e) => {
                                             e.preventDefault();
@@ -575,13 +479,9 @@ export default function CollectionDetails() {
                                         onDrop={onDropFile}
                                     >
                                         <div className="flex flex-col items-center text-center px-6">
-                                            <div className="text-sm font-semibold text-gray-900">
-                                                Drag & drop your cover image here
-                                            </div>
+                                            <div className="text-sm font-semibold text-gray-900">Drag & drop your cover image here</div>
 
-                                            <div className="mt-1 text-xs text-gray-500">
-                                                PNG, JPG or WEBP • Max 10MB
-                                            </div>
+                                            <div className="mt-1 text-xs text-gray-500">PNG, JPG or WEBP • Max 10MB</div>
 
                                             <button
                                                 type="button"
@@ -624,7 +524,14 @@ export default function CollectionDetails() {
 
                         {/* XL+: description moves UNDER the image */}
                         <div className="hidden xl:block">
-                            <DescriptionCard />
+                            <DescriptionCard
+                                collection={collection}
+                                isEditing={isEditing}
+                                draftDesc={draftDesc}
+                                setDraftDesc={setDraftDesc}
+                                error={error}
+                                inputClass={inputClass}
+                            />
                         </div>
                     </div>
 
@@ -632,36 +539,38 @@ export default function CollectionDetails() {
                     <div className="space-y-6">
                         {/* md/lg: description sits to the right and MATCHES height */}
                         <div className="xl:hidden">
-                            <DescriptionCard className={topBoxH + " overflow-hidden"} />
+                            <DescriptionCard
+                                className={topBoxH + " overflow-hidden"}
+                                collection={collection}
+                                isEditing={isEditing}
+                                draftDesc={draftDesc}
+                                setDraftDesc={setDraftDesc}
+                                error={error}
+                                inputClass={inputClass}
+                            />
                         </div>
 
                         {/* xl+: right side reserved for recipes */}
                         <div className="hidden xl:block">
-                            <RecipesSection />
+                            <RecipesSection recipes={recipes} recipesLoading={recipesLoading} />
                         </div>
                     </div>
                 </div>
 
                 {/* <xl: recipes go BELOW the top area */}
                 <div className="xl:hidden">
-                    <RecipesSection />
+                    <RecipesSection recipes={recipes} recipesLoading={recipesLoading} />
                 </div>
             </div>
 
             {showDeleteConfirm && (
                 <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
                     <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                            Delete collection?
-                        </h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Delete collection?</h3>
 
                         <p className="mt-2 text-sm text-gray-600">
-                            This will permanently delete{" "}
-                            <span className="font-semibold">{collection.name}</span>.
-                            <span className="font-semibold text-gray-900">
-                                {" "}
-                                This cannot be undone.
-                            </span>
+                            This will permanently delete <span className="font-semibold">{collection.name}</span>.
+                            <span className="font-semibold text-gray-900"> This cannot be undone.</span>
                         </p>
 
                         <div className="mt-6 flex items-center justify-end gap-3">
@@ -684,6 +593,79 @@ export default function CollectionDetails() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function DescriptionCard({
+    collection,
+    isEditing,
+    draftDesc,
+    setDraftDesc,
+    error,
+    inputClass,
+    className = "",
+}) {
+    return (
+        <div className={["rounded-2xl border border-gray-200 bg-white shadow-sm p-6", className].join(" ")}>
+            <div className="flex items-baseline justify-between">
+                <h3 className="text-base font-semibold text-gray-900">Description</h3>
+                <p className="text-xs text-gray-500">{collection?.description ? "Added" : "None"}</p>
+            </div>
+
+            {!isEditing ? (
+                collection?.description ? (
+                    <p className="mt-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{collection.description}</p>
+                ) : (
+                    <p className="mt-3 text-sm text-gray-500">
+                        Add a short description to remember what this collection is for.
+                    </p>
+                )
+            ) : (
+                <div className="mt-3">
+                    <div className="text-xs font-medium text-gray-500">Collection Description</div>
+                    <textarea
+                        value={draftDesc}
+                        onChange={(e) => setDraftDesc(e.target.value)}
+                        rows={10}
+                        className={[inputClass, "resize-none h-[240px] sm:h-[260px] md:h-[280px] lg:h-[320px]"].join(" ")}
+                        placeholder="ex. Chicken broth base, quick soups, meal prep..."
+                    />
+                </div>
+            )}
+
+            {error ? (
+                <div className="mt-4 rounded-2xl bg-red-50 p-4 ring-1 ring-red-200">
+                    <p className="text-sm text-red-700">{error}</p>
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+function RecipesSection({ recipes, recipesLoading, className = "" }) {
+    return (
+        <div className={className}>
+            <div className="flex items-baseline justify-between">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">Recipes in this collection</h2>
+                <span className="text-xs text-gray-500">{recipesLoading ? "…" : `${recipes.length} total`}</span>
+            </div>
+
+            <div className="mt-2 h-1 w-10 rounded-full bg-yellow-400" />
+
+            {recipesLoading ? (
+                <p className="mt-4 text-sm text-gray-500">Loading recipes...</p>
+            ) : recipes.length === 0 ? (
+                <p className="mt-4 text-sm text-gray-500">No recipes in this collection yet.</p>
+            ) : (
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {recipes.map((r) => (
+                        <div key={r.id} className="max-w-[170px]">
+                            <RecipeCard recipe={r} />
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
