@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthProvider";
 import { supabase } from "../../lib/supabaseClient";
 import { getCollection, updateCollection } from "../../lib/collections";
@@ -8,6 +8,7 @@ import { RecipeCard } from "../../components/recipe/RecipeCard";
 
 export default function CollectionDetails() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const { user } = useAuth();
 
     const [loading, setLoading] = useState(true);
@@ -36,6 +37,10 @@ export default function CollectionDetails() {
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState("");
     const [removeImage, setRemoveImage] = useState(false);
+
+    // delete
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         async function loadCollection() {
@@ -90,7 +95,7 @@ export default function CollectionDetails() {
 
                 if (joinErr) throw joinErr;
 
-                const recipeIds = (joinRows ?? []).map(r => r.recipe_id);
+                const recipeIds = (joinRows ?? []).map((r) => r.recipe_id);
 
                 if (!recipeIds.length) {
                     setRecipes([]);
@@ -107,8 +112,8 @@ export default function CollectionDetails() {
                 if (recipesErr) throw recipesErr;
 
                 // 3) preserve order from join table
-                const byId = new Map(recipesData.map(r => [r.id, r]));
-                const ordered = recipeIds.map(id => byId.get(id)).filter(Boolean);
+                const byId = new Map(recipesData.map((r) => [r.id, r]));
+                const ordered = recipeIds.map((rid) => byId.get(rid)).filter(Boolean);
 
                 setRecipes(ordered);
             } catch (err) {
@@ -269,14 +274,55 @@ export default function CollectionDetails() {
         setIsDragging(false);
     }
 
+    async function handleDelete() {
+        try {
+            setDeleting(true);
+            setError("");
+
+            // 1) remove image from storage if it exists
+            if (collection?.image_path) {
+                const { error: removeErr } = await supabase.storage
+                    .from("recipe-images")
+                    .remove([collection.image_path]);
+
+                if (removeErr) console.log("Failed to remove image:", removeErr.message);
+            }
+
+            // 2) delete join rows (collection_recipes)
+            const { error: joinErr } = await supabase
+                .from("collection_recipes")
+                .delete()
+                .eq("user_id", user.id)
+                .eq("collection_id", collection.id);
+
+            if (joinErr) console.log("Failed to remove join rows:", joinErr.message);
+
+            // 3) delete the collection row
+            const { error: colErr } = await supabase
+                .from("collections")
+                .delete()
+                .eq("user_id", user.id)
+                .eq("id", collection.id);
+
+            if (colErr) throw colErr;
+
+            navigate("/collections");
+        } catch (err) {
+            console.log(err?.message);
+            setError(err?.message || "Failed to delete collection.");
+        } finally {
+            setDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    }
+
     if (loading) return null;
     if (!collection) return <div>Collection not found.</div>;
 
     const inputClass =
         "w-full rounded-xl bg-gray-100 mt-2 mb-2 px-4 py-2.5 outline-none ring-2 ring-transparent focus:ring-yellow-300";
 
-    const topBoxH =
-        "h-[320px] sm:h-[360px] md:h-[380px] lg:h-[420px]";
+    const topBoxH = "h-[320px] sm:h-[360px] md:h-[380px] lg:h-[420px]";
 
     function DescriptionCard({ className = "" }) {
         return (
@@ -312,7 +358,10 @@ export default function CollectionDetails() {
                             value={draftDesc}
                             onChange={(e) => setDraftDesc(e.target.value)}
                             rows={10}
-                            className={[inputClass, "resize-none h-[240px] sm:h-[260px] md:h-[280px] lg:h-[320px]"].join(" ")}
+                            className={[
+                                inputClass,
+                                "resize-none h-[240px] sm:h-[260px] md:h-[280px] lg:h-[320px]",
+                            ].join(" ")}
                             placeholder="ex. Chicken broth base, quick soups, meal prep..."
                         />
                     </div>
@@ -344,7 +393,9 @@ export default function CollectionDetails() {
                 {recipesLoading ? (
                     <p className="mt-4 text-sm text-gray-500">Loading recipes...</p>
                 ) : recipes.length === 0 ? (
-                    <p className="mt-4 text-sm text-gray-500">No recipes in this collection yet.</p>
+                    <p className="mt-4 text-sm text-gray-500">
+                        No recipes in this collection yet.
+                    </p>
                 ) : (
                     <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {recipes.map((r) => (
@@ -388,13 +439,23 @@ export default function CollectionDetails() {
 
                     <div className="shrink-0 flex items-center gap-2">
                         {!isEditing ? (
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(true)}
-                                className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
-                            >
-                                Edit
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(true)}
+                                    className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="rounded-xl bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-300 transition"
+                                >
+                                    Delete
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <button
@@ -586,6 +647,45 @@ export default function CollectionDetails() {
                     <RecipesSection />
                 </div>
             </div>
+
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                            Delete collection?
+                        </h3>
+
+                        <p className="mt-2 text-sm text-gray-600">
+                            This will permanently delete{" "}
+                            <span className="font-semibold">{collection.name}</span>.
+                            <span className="font-semibold text-gray-900">
+                                {" "}
+                                This cannot be undone.
+                            </span>
+                        </p>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200 disabled:opacity-60 transition"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={handleDelete}
+                                className="rounded-xl bg-yellow-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-yellow-400 active:scale-[0.98] transition disabled:opacity-60"
+                            >
+                                {deleting ? "Deleting..." : "Delete"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
