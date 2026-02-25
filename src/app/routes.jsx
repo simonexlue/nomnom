@@ -9,6 +9,7 @@ import { AppLayout } from "../components/layout/AppLayout";
 import RecipeDetails from "../features/recipes/RecipeDetails";
 import NewCollection from "../features/collections/NewCollection";
 import CollectionDetails from "../features/collections/CollectionDetails";
+import AllRecipes from "../features/recipes/AllRecipes";
 
 // Optional placeholders so your nav links don't 404
 function ComingSoon({ title }) {
@@ -48,7 +49,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
 
       // Replace these with real pages later
-      { path: "recipes", element: <ComingSoon title="Recipes" /> },
+      { path: "recipes", element: <AllRecipes /> },
       { path: "recipes/new", element: <NewRecipe /> },
       { path: "recipes/:slug", element: <RecipeDetails /> },
       { path: "collections", element: <ComingSoon title="Collections" /> },
